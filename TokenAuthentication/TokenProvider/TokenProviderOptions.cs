@@ -2,6 +2,8 @@
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Identity;
+using TokenAuthentication.Models;
 
 namespace TokenAuthentication
 {
@@ -37,7 +39,7 @@ namespace TokenAuthentication
         /// <summary>
         /// Resolves a user identity given a username and password.
         /// </summary>
-        public Func<string, string, Task<ClaimsIdentity>> IdentityResolver { get; set; }
+        public Func<string, string, UserManager<ApplicationUser>, SignInManager<ApplicationUser>, Task<ClaimsIdentity>> IdentityResolver { get; set; }
 
         /// <summary>
         /// Generates a random value (nonce) for each generated token.

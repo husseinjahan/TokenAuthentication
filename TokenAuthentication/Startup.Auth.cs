@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Identity;
+using TokenAuthentication.Models;
 
 namespace TokenAuthentication
 {
@@ -44,16 +46,16 @@ namespace TokenAuthentication
 
 
 
-            app.UseCookieAuthentication(new CookieAuthenticationOptions
-            {
-                AutomaticAuthenticate = true,
-                AutomaticChallenge = true,
-                AuthenticationScheme = "Cookie",
-                CookieName = Configuration.GetSection("TokenAuthentication:CookieName").Value,
-                TicketDataFormat = new CustomJwtDataFormat(
-                    SecurityAlgorithms.HmacSha256,
-                    tokenValidationParameters)
-            });
+            //app.UseCookieAuthentication(new CookieAuthenticationOptions
+            //{
+            //    AutomaticAuthenticate = true,
+            //    AutomaticChallenge = true,
+            //    AuthenticationScheme = "Cookie",
+            //    CookieName = Configuration.GetSection("TokenAuthentication:CookieName").Value,
+            //    TicketDataFormat = new CustomJwtDataFormat(
+            //        SecurityAlgorithms.HmacSha256,
+            //        tokenValidationParameters)
+            //});
 
             var tokenProviderOptions = new TokenProviderOptions
             {
@@ -69,13 +71,18 @@ namespace TokenAuthentication
 
         }
 
-        private async Task<ClaimsIdentity> GetIdentity(string username, string password)
+        private async Task<ClaimsIdentity> GetIdentity(string username, string password, UserManager<ApplicationUser> usermanager, SignInManager<ApplicationUser> signinmanager)
         {
-            // Don't do this in production, obviously!
-            if (username == "TEST" && password == "TEST123")
+            var result = await signinmanager.PasswordSignInAsync(username, password, false, lockoutOnFailure: false);
+            if (result.Succeeded)
             {
                 return await Task.FromResult(new ClaimsIdentity(new GenericIdentity(username, "Token"), new Claim[] { }));
             }
+            // Don't do this in production, obviously!
+            //if (username == "TEST" && password == "TEST123")
+            //{
+            //    return await Task.FromResult(new ClaimsIdentity(new GenericIdentity(username, "Token"), new Claim[] { }));
+            //}
 
             // Credentials are invalid, or account doesn't exist
             return await Task.FromResult<ClaimsIdentity>(null);

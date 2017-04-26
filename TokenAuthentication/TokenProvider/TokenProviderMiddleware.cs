@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Identity;
+using TokenAuthentication.Models;
 
 namespace TokenAuthentication
 {
@@ -13,11 +15,18 @@ namespace TokenAuthentication
         private readonly RequestDelegate _next;
         private readonly TokenProviderOptions _options;
         private readonly JsonSerializerSettings _serializerSettings;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
         public TokenProviderMiddleware(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
             RequestDelegate next,
             IOptions<TokenProviderOptions> options)
         {
+            _userManager = userManager;
+            _signInManager = signInManager;
+
             _next = next;
 
             _options = options.Value;
@@ -54,7 +63,7 @@ namespace TokenAuthentication
             var username = context.Request.Form["username"];
             var password = context.Request.Form["password"];
 
-            var identity = await _options.IdentityResolver(username, password);
+            var identity = await _options.IdentityResolver(username, password, _userManager, _signInManager);
             if (identity == null)
             {
                 context.Response.StatusCode = 400;
@@ -113,7 +122,7 @@ namespace TokenAuthentication
 
             if (options.Expiration == TimeSpan.Zero)
             {
-                throw new ArgumentException("زمان نمیتواند صفر باشد..", nameof(TokenProviderOptions.Expiration));
+                throw new ArgumentException("زمان نمیتواند صفر باشد.", nameof(TokenProviderOptions.Expiration));
             }
 
             if (options.IdentityResolver == null)
